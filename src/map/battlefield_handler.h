@@ -41,14 +41,15 @@ class CBattlefieldHandler
 public:
 
     CBattlefieldHandler(CZone* PZone);
-    void	HandleBattlefields(time_point tick);							    // called every tick to handle win/lose conditions, locking the bcnm, etc
+    void	      HandleBattlefields(time_point tick);							    // called every tick to handle win/lose conditions, locking the bcnm, etc
     CBattlefield* LoadBattlefield(CCharEntity* PChar, uint16 battlefield);
     CBattlefield* GetBattlefield(CBaseEntity* PEntity);                           // returns the battlefield a player is in
-    CBattlefield* RegisterBattlefield(CCharEntity* PChar, uint16 battlefield, uint8 area);
-    bool          RemoveFromBattlefield(CBaseEntity* PEntity, CBattlefield* PBattlefield = nullptr, uint8 leavecode = 0);
+    CBattlefield* RegisterBattlefield(CCharEntity* PChar, uint16 battlefield, uint8 area, uint32 initiator);
+    bool          RemoveFromBattlefield(CBaseEntity* PEntity, CBattlefield* PBattlefield = nullptr, uint8 leavecode = 3);
+
 private:
-    CZone*                     m_PZone;
-    uint8                      m_MaxBattlefields; // usually 3 except dynamis, einherjar, besieged, ...
+    CZone*                                     m_PZone;
+    uint8                                      m_MaxBattlefields; // usually 3 except dynamis, einherjar, besieged, ...
     std::vector<std::unique_ptr<CBattlefield>> m_Battlefields;    // area
 };
 

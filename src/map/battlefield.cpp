@@ -101,9 +101,9 @@ uint8 CBattlefield::GetArea()
     return m_Area;
 }
 
-BattlefieldRecord_t CBattlefield::GetCurrentRecord()
+BattlefieldRecord_t CBattlefield::GetRecord()
 {
-    return m_CurrentRecord;
+    return m_Record;
 }
 
 uint8 CBattlefield::GetStatus()
@@ -124,6 +124,11 @@ time_point CBattlefield::GetStartTime()
 duration CBattlefield::GetTimeInside()
 {
     return m_Tick - m_StartTime;
+}
+
+time_point CBattlefield::GetFightTime()
+{
+    return m_FightTick;
 }
 
 duration CBattlefield::GetTimeLimit()
@@ -188,10 +193,10 @@ void CBattlefield::SetArea(uint8 area)
     m_Area = area;
 }
 
-void CBattlefield::SetCurrentRecord(int8* name, duration time)
+void CBattlefield::SetRecord(int8* name, duration time)
 {
-    m_CurrentRecord.name = name;
-    m_CurrentRecord.time = time;
+    m_Record.name = name;
+    m_Record.time = time;
 
     const int8* query = "UPDATE battlefield_info SET fastestName = %s, fastestTime = %u WHERE battlefieldId = %u";
     if (Sql_Query(SqlHandle, query, name, time, this->GetID() == SQL_ERROR))
@@ -395,12 +400,13 @@ bool CBattlefield::RemoveEntity(CBaseEntity* PEntity, uint8 leavecode)
     return found;
 }
 
-bool CBattlefield::DoTick(time_point time)
+void CBattlefield::DoTick(time_point time)
 {
     //todo : bcnm - update tick, fight tick, end if time is up
     m_Tick = time;
-    m_FightTick = InProgress() ? server_clock::now() : m_FightTick;
-    return false;
+    m_FightTick = m_Status != BATTLEFIELD_STATUS_LOST && m_Status != BATTLEFIELD_STATUS_WON ? time : m_FightTick;
+
+    luautils::OnBattlefieldTick(this);
 }
 
 bool CBattlefield::CanCleanup(bool cleanup)
@@ -408,11 +414,17 @@ bool CBattlefield::CanCleanup(bool cleanup)
     if (cleanup)
         m_Cleanup = cleanup;
 
-    return m_Cleanup && (GetStatus() == BATTLEFIELD_STATUS_LOST || GetStatus() == BATTLEFIELD_STATUS_WON);
+    return m_Cleanup;
 }
 
 void CBattlefield::Cleanup()
 {
+    // wipe enmity from all mobs in list if needed
+    ForEachEnemy([&](CMobEntity* PMob)
+    {
+        RemoveEntity(PMob);
+    });
+
     ForEachPlayer([&](CCharEntity* PChar)
     {
         RemoveEntity(PChar, -1);
@@ -423,21 +435,15 @@ void CBattlefield::Cleanup()
         RemoveEntity(PAlly);
     });
 
-    // wipe enmity from all mobs in list if needed
-    ForEachEnemy([&](CMobEntity* PMob)
-    {
-        RemoveEntity(PMob);
-    });
-
     //make chest vanish (if any)
     ForEachNpc([&](CNpcEntity* PNpc)
     {
         RemoveEntity(PNpc);
     });
 
-    if (GetCurrentRecord().time < (m_FightTick - m_StartTime))
+    if (GetRecord().time > (m_FightTick - m_StartTime))
     {
-        SetCurrentRecord((int8*)m_Initiator.name.c_str(), (m_FightTick - m_StartTime));
+        SetRecord((int8*)m_Initiator.name.c_str(), (m_FightTick - m_StartTime));
     }
 }
 

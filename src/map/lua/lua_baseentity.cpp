@@ -6915,7 +6915,7 @@ inline int32 CLuaBaseEntity::addRecast(lua_State* L)
     register a player to a battlefield
 ****************************************************************/
 
-inline int32 CLuaBaseEntity::registerBattlefield(lua_State *L)
+inline int32 CLuaBaseEntity::registerBattlefield(lua_State* L)
 {
     DSP_DEBUG_BREAK_IF(m_PBaseEntity == nullptr || PZone->m_BattlefieldHandler == nullptr);
     DSP_DEBUG_BREAK_IF(m_PBaseEntity->objtype != TYPE_PC);
@@ -6926,8 +6926,9 @@ inline int32 CLuaBaseEntity::registerBattlefield(lua_State *L)
     auto PEffect = PChar->StatusEffectContainer->GetStatusEffect(EFFECT_BATTLEFIELD);
     auto battlefield = PEffect ? PEffect->GetPower() : lua_tointeger(L, 1);
     auto area = PEffect ? PEffect->GetSubPower() : lua_tointeger(L, 2);
+    auto initiator = PEffect ? PEffect->GetSubID() : lua_tointeger(L, 3);
 
-    if (PZone->m_BattlefieldHandler->RegisterBattlefield(PChar, battlefield, area))
+    if (PZone->m_BattlefieldHandler->RegisterBattlefield(PChar, battlefield, area, initiator))
     {
         lua_pushinteger(L, 1);
     }
@@ -6944,7 +6945,7 @@ inline int32 CLuaBaseEntity::registerBattlefield(lua_State *L)
     and open chest if there is one)
 ****************************************************************/
 
-inline int32 CLuaBaseEntity::leaveBattlefield(lua_State *L)
+inline int32 CLuaBaseEntity::leaveBattlefield(lua_State* L)
 {
     DSP_DEBUG_BREAK_IF(m_PBaseEntity == nullptr || m_PBaseEntity->loc.zone->m_BattlefieldHandler == nullptr);
     DSP_DEBUG_BREAK_IF(m_PBaseEntity->objtype == TYPE_NPC);
@@ -6967,9 +6968,9 @@ inline int32 CLuaBaseEntity::getBattlefieldID(lua_State *L)
 
     if (battlefield == -1)
     {
-        auto PEntity = dynamic_cast<CBattleEntity*>(m_PBaseEntity);
-        auto PEffect = PEntity->StatusEffectContainer->GetStatusEffect(EFFECT_BATTLEFIELD);
-        battlefield = PEffect ? PEffect->GetPower() : -1;
+        auto PBattlefield = m_PBaseEntity->loc.zone->m_BattlefieldHandler->GetBattlefield(m_PBaseEntity);
+
+        battlefield = PBattlefield ? PBattlefield->GetID() : -1;
     }
 
     lua_pushinteger(L, battlefield);

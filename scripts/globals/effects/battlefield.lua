@@ -12,6 +12,7 @@ function onEffectGain(target,effect)
     if (target:getPet()) then
         target:getPet():addStatusEffect(effect);
     end
+    target:registerBattlefield(effect:getPower(), effect:getSubPower(), effect:getSubID());
 end;
 
 -----------------------------------
@@ -29,7 +30,7 @@ function onEffectLose(target,effect)
     if (target:getPet()) then
         target:getPet():delStatusEffect(EFFECT_BATTLEFIELD);
     end
-    target:leaveBattlefield(effect:getPower(), effect:getSubID());
+    target:leaveBattlefield(effect:getPower(), effect:getSubPower());
 end;
 
 -----------------------------------

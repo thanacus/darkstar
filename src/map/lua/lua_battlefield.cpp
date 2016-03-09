@@ -22,6 +22,7 @@
 */
 
 #include "../../common/showmsg.h"
+#include "../../common/timer.h"
 
 #include "lua_battlefield.h"
 #include "lua_baseentity.h"
@@ -91,9 +92,12 @@ inline int32 CLuaBattlefield::getTimeLimit(lua_State* L)
     return 1;
 }
 
-inline int32 CLuaBattlefield::getTimeInside(lua_State* L) {
+inline int32 CLuaBattlefield::getTimeInside(lua_State* L)
+{
     DSP_DEBUG_BREAK_IF(m_PLuaBattlefield == nullptr);
+
     uint32 duration = std::chrono::duration_cast<std::chrono::seconds>(m_PLuaBattlefield->GetTimeInside()).count();
+
     lua_pushinteger(L, duration);
     return 1;
 }
@@ -106,17 +110,98 @@ inline int32 CLuaBattlefield::getFightTick(lua_State* L)
     return 1;
 }
 
-inline int32 CLuaBattlefield::getFastestTime(lua_State* L) {
+inline int32 CLuaBattlefield::getWipeTime(lua_State* L)
+{
     DSP_DEBUG_BREAK_IF(m_PLuaBattlefield == nullptr);
 
-    lua_pushinteger(L, std::chrono::duration_cast<std::chrono::seconds>(m_PLuaBattlefield->GetCurrentRecord().time).count());
+    auto count = std::chrono::duration_cast<std::chrono::milliseconds>(get_server_start_time() - m_PLuaBattlefield->GetWipeTime()).count();
+
+    lua_pushinteger(L, count);
     return 1;
 }
 
-inline int32 CLuaBattlefield::getFastestPlayer(lua_State* L) {
+inline int32 CLuaBattlefield::getFightTime(lua_State* L)
+{
     DSP_DEBUG_BREAK_IF(m_PLuaBattlefield == nullptr);
 
-    lua_pushstring(L, m_PLuaBattlefield->GetCurrentRecord().name.c_str());
+    lua_pushinteger(L, std::chrono::duration_cast<std::chrono::milliseconds>(get_server_start_time() - m_PLuaBattlefield->GetFightTime()).count());
+    return 1;
+}
+
+inline int32 CLuaBattlefield::getPlayers(lua_State* L)
+{
+    DSP_DEBUG_BREAK_IF(m_PLuaBattlefield == nullptr);
+
+    lua_createtable(L, m_PLuaBattlefield->m_PlayerList.size(), 0);
+    int8 newTable = lua_gettop(L);
+    int i = 1;
+
+    for (auto player : m_PLuaBattlefield->m_PlayerList)
+    {
+        lua_getglobal(L, CLuaBaseEntity::className);
+        lua_pushstring(L, "new");
+        lua_gettable(L, -2);
+        lua_insert(L, -2);
+        lua_pushlightuserdata(L, (void*)m_PLuaBattlefield->GetZone()->GetEntity(player, TYPE_NPC));
+        lua_pcall(L, 2, 1, 0);
+
+        lua_rawseti(L, -2, i++);
+    }
+    return 1;
+}
+
+inline int32 CLuaBattlefield::getMobs(lua_State* L)
+{
+    DSP_DEBUG_BREAK_IF(m_PLuaBattlefield == nullptr);
+
+    // do we want just required mobs, all mobs, or just mobs not needed to win
+    auto required = lua_isnil(L, 1) ? true : lua_toboolean(L, 1);
+    auto adds = lua_isnil(L, 2) ? false : lua_toboolean(L, 2);
+    lua_createtable(L, m_PLuaBattlefield->m_EnemyList.size(), 0);   // yes this will create a larger table than results returned
+    int8 newTable = lua_gettop(L);
+    int i = 1;
+
+    for (auto mob : m_PLuaBattlefield->m_EnemyList)
+    {
+        CBaseEntity* PMob = nullptr;
+
+        if ((required && mob.condition & CONDITION_SPAWNED_AT_START) || adds)
+            PMob = m_PLuaBattlefield->GetZone()->GetEntity(mob.targid, TYPE_MOB | TYPE_PET);
+
+        if (PMob)
+        {
+            lua_getglobal(L, CLuaBaseEntity::className);
+            lua_pushstring(L, "new");
+            lua_gettable(L, -2);
+            lua_insert(L, -2);
+            lua_pushlightuserdata(L, (void*)PMob);
+            lua_pcall(L, 2, 1, 0);
+
+            lua_rawseti(L, -2, i++);
+        }
+    }
+    return 1;
+}
+
+inline int32 CLuaBattlefield::getNPCs(lua_State* L)
+{
+    DSP_DEBUG_BREAK_IF(m_PLuaBattlefield == nullptr);
+
+    lua_createtable(L, m_PLuaBattlefield->m_NpcList.size(), 0);
+    int8 newTable = lua_gettop(L);
+    int i = 1;
+
+    for (auto npc : m_PLuaBattlefield->m_NpcList)
+    {
+        lua_getglobal(L, CLuaBaseEntity::className);
+        lua_pushstring(L, "new");
+        lua_gettable(L, -2);
+        lua_insert(L, -2);
+        lua_pushlightuserdata(L, (void*)m_PLuaBattlefield->GetZone()->GetEntity(npc, TYPE_NPC));
+        lua_pcall(L, 2, 1, 0);
+
+        lua_rawseti(L, -2, i++);
+    }
     return 1;
 }
 
@@ -141,6 +226,37 @@ inline int32 CLuaBattlefield::getAllies(lua_State* L)
     }
 
     return 1;
+}
+
+inline int32 CLuaBattlefield::getRecord(lua_State* L)
+{
+    DSP_DEBUG_BREAK_IF(m_PLuaBattlefield == nullptr);
+
+    lua_pushstring(L, m_PLuaBattlefield->GetRecord().name.c_str());
+    lua_pushinteger(L, std::chrono::duration_cast<std::chrono::milliseconds>(m_PLuaBattlefield->GetRecord().time).count());
+    return 1;
+}
+
+inline int32 CLuaBattlefield::setWipeTime(lua_State* L)
+{
+    DSP_DEBUG_BREAK_IF(m_PLuaBattlefield == nullptr);
+    DSP_DEBUG_BREAK_IF(lua_isnil(L, 1) || !lua_isnumber(L, 1));
+
+    m_PLuaBattlefield->SetWipeTime(get_server_start_time() + std::chrono::milliseconds(lua_tointeger(L, 1)));
+    return 0;
+}
+
+inline int32 CLuaBattlefield::setRecord(lua_State* L)
+{
+    DSP_DEBUG_BREAK_IF(m_PLuaBattlefield == nullptr);
+    DSP_DEBUG_BREAK_IF(lua_isnil(L, 1) || !lua_isstring(L, 1));
+    DSP_DEBUG_BREAK_IF(lua_isnil(L, 2) || !lua_isnumber(L, 2));
+
+    auto name = lua_tostring(L, 1);
+    auto time = lua_tointeger(L, 2);
+
+    m_PLuaBattlefield->SetRecord((int8*)name, std::chrono::milliseconds(time));
+    return 0;
 }
 
 inline int32 CLuaBattlefield::loadMobs(lua_State* L)
@@ -214,9 +330,17 @@ Lunar<CLuaBattlefield>::Register_t CLuaBattlefield::methods[] =
     LUNAR_DECLARE_METHOD(CLuaBattlefield,getArea),
     LUNAR_DECLARE_METHOD(CLuaBattlefield,getTimeLimit),
     LUNAR_DECLARE_METHOD(CLuaBattlefield,getTimeInside),
-    LUNAR_DECLARE_METHOD(CLuaBattlefield,getFastestTime),
-    LUNAR_DECLARE_METHOD(CLuaBattlefield,getFastestPlayer),
+    LUNAR_DECLARE_METHOD(CLuaBattlefield,getFightTick),
+    LUNAR_DECLARE_METHOD(CLuaBattlefield,getWipeTime),
+    LUNAR_DECLARE_METHOD(CLuaBattlefield,getFightTime),
+    LUNAR_DECLARE_METHOD(CLuaBattlefield,getPlayers),
+    LUNAR_DECLARE_METHOD(CLuaBattlefield,getMobs),
+    LUNAR_DECLARE_METHOD(CLuaBattlefield,getNPCs),
     LUNAR_DECLARE_METHOD(CLuaBattlefield,getAllies),
+    LUNAR_DECLARE_METHOD(CLuaBattlefield,getRecord),
+
+    LUNAR_DECLARE_METHOD(CLuaBattlefield,setWipeTime),
+    LUNAR_DECLARE_METHOD(CLuaBattlefield,setRecord),
     LUNAR_DECLARE_METHOD(CLuaBattlefield,loadMobs),
     LUNAR_DECLARE_METHOD(CLuaBattlefield,loadNPCs),
     LUNAR_DECLARE_METHOD(CLuaBattlefield,insertEntity),

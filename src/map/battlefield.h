@@ -104,7 +104,7 @@ public:
     string_t               GetName();
     BattlefieldInitiator_t GetInitiator();
     uint8                  GetArea();
-    BattlefieldRecord_t    GetCurrentRecord();
+    BattlefieldRecord_t    GetRecord();
     uint8                  GetStatus();
     uint16                 GetRuleMask();
     time_point             GetStartTime();
@@ -133,7 +133,7 @@ public:
     void                   SetName(int8* name);
     void                   SetInitiator(int8* name);
     void                   SetArea(uint8 area);
-    void                   SetCurrentRecord(int8* name, duration time);
+    void                   SetRecord(int8* name, duration time);
     void                   SetStatus(uint8 status);
     void                   SetRuleMask(uint16 rulemask);
     void                   SetStartTime(time_point time);
@@ -149,7 +149,7 @@ public:
     bool                   InsertEntity(CBaseEntity* PEntity, bool inBattlefield = false, BATTLEFIELDMOBCONDITION conditions = CONDITION_NONE);
     CBaseEntity*           GetEntity(CBaseEntity* PEntity);
     bool                   RemoveEntity(CBaseEntity* PEntity, uint8 leavecode = 0);
-    bool                   DoTick(time_point time);
+    void                   DoTick(time_point time);
     bool                   CanCleanup(bool cleanup = false);
     void                   Cleanup();
     bool                   LoadMobs();
@@ -177,7 +177,7 @@ private:
     string_t               m_Name;
     BattlefieldInitiator_t m_Initiator;
     uint8                  m_Area;
-    BattlefieldRecord_t    m_CurrentRecord;
+    BattlefieldRecord_t    m_Record;
     uint8                  m_Status{ BATTLEFIELD_STATUS_OPEN };
     uint16                 m_Rules;
     time_point             m_StartTime;
