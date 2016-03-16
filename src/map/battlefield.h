@@ -117,6 +117,7 @@ public:
     uint8                  GetLevelCap();
     uint16                 GetLootID();
     duration               GetFinishTime();
+    duration               GetRemainingTime();
 
     bool                   AllPlayersDead();
     bool                   InProgress();

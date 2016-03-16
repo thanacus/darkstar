@@ -60,12 +60,12 @@ CBattlefieldHandler::CBattlefieldHandler(CZone* PZone)
 void CBattlefieldHandler::HandleBattlefields(time_point tick)
 {
     auto check = [](auto& battlefield) {return battlefield->CanCleanup();};
+    m_Battlefields.erase(std::remove_if(m_Battlefields.begin(), m_Battlefields.end(), check), m_Battlefields.end());
+
     for (auto& PBattlefield : m_Battlefields)
     {
         PBattlefield->DoTick(server_clock::now());
     };
-
-    m_Battlefields.erase(std::remove_if(m_Battlefields.begin(), m_Battlefields.end(), check), m_Battlefields.end());
 }
 
 CBattlefield* CBattlefieldHandler::LoadBattlefield(CCharEntity* PChar, uint16 battlefield)
@@ -75,7 +75,7 @@ CBattlefield* CBattlefieldHandler::LoadBattlefield(CCharEntity* PChar, uint16 ba
         auto area = 1;
 
         // todo: this is horrible, find another way to set the area number
-        for (area = 1; area < m_MaxBattlefields; ++area)
+        for (; area < m_MaxBattlefields; ++area)
             for (auto& PBattlefield : m_Battlefields)
                 if (area == PBattlefield->GetArea())
                     continue;
@@ -160,8 +160,5 @@ bool CBattlefieldHandler::RemoveFromBattlefield(CBaseEntity* PEntity, CBattlefie
         PBattlefield = GetBattlefield(PEntity);
     }
 
-    // idek why this has a return type
-    DSP_DEBUG_BREAK_IF(PBattlefield == nullptr);
-
-    return PBattlefield->RemoveEntity(PEntity, leavecode);
+    return PBattlefield ? PBattlefield->RemoveEntity(PEntity, leavecode) : false;
 }

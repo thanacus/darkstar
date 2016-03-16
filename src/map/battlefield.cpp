@@ -146,6 +146,11 @@ duration CBattlefield::GetFinishTime()
     return m_FinishTime;
 }
 
+duration CBattlefield::GetRemainingTime()
+{
+    return GetTimeLimit() - GetTimeInside();
+}
+
 uint8 CBattlefield::GetMaxParticipants()
 {
     return m_MaxParticipants;
@@ -380,7 +385,7 @@ bool CBattlefield::RemoveEntity(CBaseEntity* PEntity, uint8 leavecode)
 
             GetZone()->DeletePET(PEntity);
             PEntity->PBattlefield.reset(nullptr);
-            delete PEntity;
+            delete PEntity; // todo: didnt wanna raw pointer but kj can fix
 
             return found;
         }

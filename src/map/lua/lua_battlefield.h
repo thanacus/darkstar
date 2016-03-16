@@ -48,6 +48,7 @@ public:
     int32 getArea(lua_State*);
     int32 getTimeLimit(lua_State*);
     int32 getTimeInside(lua_State*);
+    int32 getRemainingTime(lua_State*);
     int32 getFightTick(lua_State*);
     int32 getWipeTime(lua_State*);
     int32 getFightTime(lua_State*);

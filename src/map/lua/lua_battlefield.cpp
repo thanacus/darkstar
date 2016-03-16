@@ -102,6 +102,14 @@ inline int32 CLuaBattlefield::getTimeInside(lua_State* L)
     return 1;
 }
 
+inline int32 CLuaBattlefield::getRemainingTime(lua_State* L)
+{
+    DSP_DEBUG_BREAK_IF(m_PLuaBattlefield == nullptr);
+
+    lua_pushinteger(L, m_PLuaBattlefield->GetRemainingTime().count());
+    return 1;
+}
+
 inline int32 CLuaBattlefield::getFightTick(lua_State* L)
 {
     DSP_DEBUG_BREAK_IF(m_PLuaBattlefield == nullptr);
@@ -329,6 +337,7 @@ Lunar<CLuaBattlefield>::Register_t CLuaBattlefield::methods[] =
     LUNAR_DECLARE_METHOD(CLuaBattlefield,getID),
     LUNAR_DECLARE_METHOD(CLuaBattlefield,getArea),
     LUNAR_DECLARE_METHOD(CLuaBattlefield,getTimeLimit),
+    LUNAR_DECLARE_METHOD(CLuaBattlefield,getRemainingTime),
     LUNAR_DECLARE_METHOD(CLuaBattlefield,getTimeInside),
     LUNAR_DECLARE_METHOD(CLuaBattlefield,getFightTick),
     LUNAR_DECLARE_METHOD(CLuaBattlefield,getWipeTime),

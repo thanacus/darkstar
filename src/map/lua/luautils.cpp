@@ -2539,6 +2539,7 @@ namespace luautils
 
         CLuaBattlefield LuaBattlefield(PBattlefield);
         Lunar<CLuaBattlefield>::push(LuaHandle, &LuaBattlefield);
+        lua_pushinteger(LuaHandle, std::chrono::duration_cast<std::chrono::milliseconds>(PBattlefield->GetTimeInside()).count());
 
         if (lua_pcall(LuaHandle, 2, LUA_MULTRET, 0))
         {
