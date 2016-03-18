@@ -35,11 +35,11 @@ g_Battlefield.Status =
 
 function g_Battlefield.onBattlefieldTick(battlefield, timeinside)
     local tick = battlefield:getTick();
-    local killedallmobs = false;
+    local killedallmobs = true;
     
     for _, mob in pairs(battlefield:getMobs(true)) do
         if mob:getHP() > 0 then
-            killedallmobs = true;
+            killedallmobs = false;
             break;
         end;
     end;
@@ -52,7 +52,7 @@ function g_Battlefield.HandleTimePrompts(battlefield)
     local status = battlefield:getStatus();
     
     if tick/1000 % 60 then
-        for _, player in pairs(battlefield:getPlayers) do
+        for _, player in pairs(battlefield:getPlayers()) do
             player:messageBasic(202, battlefield:getRemainingTime());
         end;
    end;

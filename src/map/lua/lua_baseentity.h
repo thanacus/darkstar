@@ -213,14 +213,12 @@ public:
 
     int32 registerBattlefield(lua_State*);         // attempt to register and physically enter a battlefield
     int32 leaveBattlefield(lua_State*);            // leave a battlefield
+    int32 isInBattlefield(lua_State*);             // physically inside a battlefield
     int32 RestoreAndHealOnBattlefield(lua_State*); // restore ability , PM and PV on the specific instance
     int32 getBattlefieldID(lua_State*);            // returns battlefield id
 
     int32 setSpawn(lua_State*);                // Sets spawn point
     int32 setRespawnTime(lua_State*);          // set respawn time
-
-    int32 isInBattlefieldList(lua_State*);  // Return true is the mob is in battlefield list
-    int32 addInBattlefieldList(lua_State*); // Add the mob to the battlefield list
 
     int32 getVar(lua_State*);               // Returns a character variable
     int32 setVar(lua_State*);               // Sets a character variable

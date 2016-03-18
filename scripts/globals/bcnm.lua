@@ -134,6 +134,7 @@ function EventTriggerBCNM(player, npc)
             status = player:getStatusEffect(EFFECT_BATTLEFIELD);
             playerbcnmid = status:getPower();
             playermask = GetBattleBitmask(playerbcnmid, player:getZoneID(), 1);
+            -- todo: check party member requirements
             if (playermask~=-1 and bit.band(playermask, checkNonTradeBCNM(player, npc))) then
                 -- This gives players who did not trade to go in the option of entering the fight
                 player:startEvent(0x7d00, 0, 0, 0, playermask, 0, 0, 0, 0);
@@ -159,7 +160,7 @@ function EventUpdateBCNM(player, csid, option, entrance)
     print("UPDATE csid "..csid.." option "..option);
     -- seen: option 2, 3, 0 in that order
     if (csid == 0x7d03 and option == 2) then -- leaving a BCNM the player is currently in.
-        player:bcnmLeave(1);
+        player:leaveBattlefield(1);
         return true;
     end
     if (option == 255 and csid == 0x7d00) then -- Clicked yes, try to register bcnmid
@@ -315,10 +316,10 @@ function GetBattleBitmask(id, zone, mode)
     local ret = -1;
     local mask = 0;
     
-    for zoneindex = 1, table.getn(bcnmid_param_map), 2 do
-        if (zone==bcnmid_param_map[zoneindex]) then -- matched zone
-            for bcnmindex = 1, table.getn(bcnmid_param_map[zoneindex + 1]), 2 do -- loop bcnms in this zone
-                if (id==bcnmid_param_map[zoneindex+1][bcnmindex]) then -- found bcnmid
+    for zoneindex = 1, #bcnmid_param_map, 2 do
+        if (zone == bcnmid_param_map[zoneindex]) then -- matched zone
+            for bcnmindex = 1, #bcnmid_param_map[zoneindex + 1], 2 do -- loop bcnms in this zone
+                if (id == bcnmid_param_map[zoneindex+1][bcnmindex]) then -- found bcnmid
                     if (mode == 1) then
                         ret = mask + (2^bcnmid_param_map[zoneindex+1][bcnmindex+1]); -- for trigger (mode 1): 1, 2, 4, 8, 16, 32, ...
                     else

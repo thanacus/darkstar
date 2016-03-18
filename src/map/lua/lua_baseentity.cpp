@@ -6962,11 +6962,12 @@ inline int32 CLuaBaseEntity::leaveBattlefield(lua_State* L)
 inline int32 CLuaBaseEntity::getBattlefieldID(lua_State *L)
 {
     DSP_DEBUG_BREAK_IF(m_PBaseEntity == nullptr);
-    DSP_DEBUG_BREAK_IF(PChar->loc.zone->m_BattlefieldHandler == nullptr);
+    DSP_DEBUG_BREAK_IF(m_PBaseEntity->loc.zone->m_BattlefieldHandler == nullptr);
 
     auto battlefield = m_PBaseEntity->PBattlefield ? m_PBaseEntity->PBattlefield->GetID() : -1;
+    auto inside = lua_isnil(L, 1) ? false : lua_toboolean(L, 1);
 
-    if (battlefield == -1)
+    if (battlefield == -1 && !inside)
     {
         auto PBattlefield = m_PBaseEntity->loc.zone->m_BattlefieldHandler->GetBattlefield(m_PBaseEntity);
 
@@ -6977,6 +6978,16 @@ inline int32 CLuaBaseEntity::getBattlefieldID(lua_State *L)
     return 1;
 }
 
+inline int32 CLuaBaseEntity::isInBattlefield(lua_State* L)
+{
+    DSP_DEBUG_BREAK_IF(m_PBaseEntity == nullptr);
+    DSP_DEBUG_BREAK_IF(m_PBaseEntity->loc.zone->m_BattlefieldHandler == nullptr);
+
+    auto PBattlefield = m_PBaseEntity->PBattlefield.get();
+
+    lua_pushboolean(L, PBattlefield ? true : false);
+    return 1;
+}
 
 inline int32 CLuaBaseEntity::RestoreAndHealOnBattlefield(lua_State *L)
 {
@@ -7031,69 +7042,6 @@ inline int32 CLuaBaseEntity::setRespawnTime(lua_State* L)
     }
 
     PMob->m_AllowRespawn = true;
-
-    return 0;
-}
-/*
-inline int32 CLuaBaseEntity::setStatPoppedMobs(lua_State *L)
-{
-    DSP_DEBUG_BREAK_IF(m_PBaseEntity == nullptr);
-    DSP_DEBUG_BREAK_IF(m_PBaseEntity->objtype != TYPE_MOB);
-
-    if (!lua_isnil(L, 1) && lua_isboolean(L, 1))
-        ((CMobEntity*)m_PBaseEntity)->m_StatPoppedMobs = true;
-    else
-        ((CMobEntity*)m_PBaseEntity)->m_StatPoppedMobs = false;
-    return 0;
-}
-
-inline int32 CLuaBaseEntity::getStatPoppedMobs(lua_State *L)
-{
-    DSP_DEBUG_BREAK_IF(m_PBaseEntity == nullptr);
-    DSP_DEBUG_BREAK_IF(m_PBaseEntity->objtype != TYPE_MOB);
-
-    bool isPopped = ((CMobEntity*)m_PBaseEntity)->m_StatPoppedMobs;
-
-    lua_pushboolean(L, isPopped);
-    return 1;
-}
-*/
-/************************************************************************
-*                                                                       *
-*  Check if mob is in battlefield list                                  *
-*                                                                       *
-************************************************************************/
-
-inline int32 CLuaBaseEntity::isInBattlefieldList(lua_State *L)
-{
-    DSP_DEBUG_BREAK_IF(m_PBaseEntity == nullptr);
-    DSP_DEBUG_BREAK_IF(m_PBaseEntity->objtype != TYPE_MOB);
-
-    CMobEntity* PMob = (CMobEntity*)m_PBaseEntity;
-    /* TODO: bcnm
-    if (PMob->loc.zone->m_BattlefieldHandler->checkMonsterInList(PMob))
-        lua_pushboolean(L, true);
-    else
-        lua_pushboolean(L, false);
-    */
-    return 1;
-}
-
-/************************************************************************
-*                                                                       *
-*  Add mob in battlefield list                                          *
-*                                                                       *
-************************************************************************/
-
-inline int32 CLuaBaseEntity::addInBattlefieldList(lua_State *L)
-{
-    DSP_DEBUG_BREAK_IF(m_PBaseEntity == nullptr);
-    DSP_DEBUG_BREAK_IF(m_PBaseEntity->objtype != TYPE_MOB);
-
-    CMobEntity* PMob = (CMobEntity*)m_PBaseEntity;
-
-    // TODO: bcnm
-    //PMob->loc.zone->m_BattlefieldHandler->insertMonsterInList(PMob);
 
     return 0;
 }
@@ -10358,8 +10306,6 @@ Lunar<CLuaBaseEntity>::Register_t CLuaBaseEntity::methods[] =
     LUNAR_DECLARE_METHOD(CLuaBaseEntity,updateNPCHideTime),
     LUNAR_DECLARE_METHOD(CLuaBaseEntity,getStealItem),
     LUNAR_DECLARE_METHOD(CLuaBaseEntity,itemStolen),
-    LUNAR_DECLARE_METHOD(CLuaBaseEntity,isInBattlefieldList),
-    LUNAR_DECLARE_METHOD(CLuaBaseEntity,addInBattlefieldList),
     LUNAR_DECLARE_METHOD(CLuaBaseEntity,checkDistance),
     LUNAR_DECLARE_METHOD(CLuaBaseEntity,getBaseExp),
     LUNAR_DECLARE_METHOD(CLuaBaseEntity,checkSoloPartyAlliance),

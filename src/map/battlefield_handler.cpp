@@ -130,7 +130,7 @@ CBattlefield* CBattlefieldHandler::GetBattlefield(CBaseEntity* PEntity)
 
 CBattlefield* CBattlefieldHandler::RegisterBattlefield(CCharEntity* PChar, uint16 battlefield, uint8 area, uint32 initiator)
 {
-    bool exists = false;
+    bool occupied = false;
 
     // attempt to add to an existing battlefield
     auto PBattlefield = GetBattlefield(PChar);
@@ -140,16 +140,16 @@ CBattlefield* CBattlefieldHandler::RegisterBattlefield(CCharEntity* PChar, uint1
         return nullptr;
 
     // entity wasnt found in battlefield, assume they have the effect but not physically inside battlefield
-    if (PBattlefield->GetID() == battlefield && PBattlefield->GetArea() == area && PBattlefield->GetInitiator().id == initiator)
+    if (PBattlefield && PBattlefield->GetID() == battlefield && PBattlefield->GetArea() == area && PBattlefield->GetInitiator().id == initiator)
     {
-        if (!PBattlefield->InProgress() && (exists = PBattlefield->IsOccupied()))
+        if (!PBattlefield->InProgress() && (occupied = PBattlefield->IsOccupied()))
         {
             PBattlefield->InsertEntity(PChar);
             return PBattlefield;
         }
     }
 
-    return exists ? nullptr : LoadBattlefield(PChar, battlefield);
+    return occupied ? nullptr : LoadBattlefield(PChar, battlefield);
 }
 
 bool CBattlefieldHandler::RemoveFromBattlefield(CBaseEntity* PEntity, CBattlefield* PBattlefield, uint8 leavecode)
